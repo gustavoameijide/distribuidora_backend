@@ -1,5 +1,6 @@
 import Router from "express-promise-router";
 import {
+  changePassword,
   // passwordReset,
   profile,
   signin,
@@ -21,5 +22,7 @@ router.post("/signout", signout);
 //router.put("/signin/:id", validateSchema(passwordSchema), passwordReset);
 
 router.get("/profile", isAuth, profile);
+
+router.post("/change-password", changePassword);
 
 export default router;

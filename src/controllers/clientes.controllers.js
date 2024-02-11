@@ -299,11 +299,162 @@ export const actualizarClienteFacturacion = async (req, res) => {
 };
 
 // actualizar cliente
+// export const actualizarClienteEntrega = async (req, res) => {
+//   const id = req.params.id;
+//   const { entrega } = req.body;
+
+//   // Get the current deuda_restante for the specified client
+//   const clientResult = await pool.query(
+//     "SELECT deuda_restante FROM clientes WHERE id = $1",
+//     [id]
+//   );
+
+//   if (clientResult.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   const currentDeudaRestante = clientResult.rows[0].deuda_restante;
+
+//   // Check if the entrega is greater than the current deuda_restante
+//   if (entrega > currentDeudaRestante) {
+//     return res.status(400).json({
+//       message: "La entrega no puede ser mayor a la deuda restante",
+//     });
+//   }
+
+//   // Calculate the new deuda_restante by subtracting the delivered amount
+//   const newDeudaRestante = currentDeudaRestante - entrega;
+
+//   // Update the database with the new deuda_restante
+//   const result = await pool.query(
+//     "UPDATE clientes SET entrega = $1, deuda_restante = $2 WHERE id = $3",
+//     [entrega, newDeudaRestante, id]
+//   );
+
+//   if (result.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   return res.json({
+//     message: "Cliente actualizado",
+//   });
+// };
+// actualizar cliente
+// export const actualizarClienteEntrega = async (req, res) => {
+//   const id = req.params.id;
+//   const { entrega } = req.body;
+
+//   // Obtener la deuda_restante actual para el cliente especificado
+//   const clientResult = await pool.query(
+//     "SELECT deuda_restante FROM clientes WHERE id = $1",
+//     [id]
+//   );
+
+//   if (clientResult.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   const currentDeudaRestante = clientResult.rows[0].deuda_restante;
+
+//   // Verificar si la entrega es mayor que la deuda_restante actual
+//   if (entrega > currentDeudaRestante) {
+//     return res.status(400).json({
+//       message: "La entrega no puede ser mayor a la deuda restante",
+//     });
+//   }
+
+//   // Calcular la nueva deuda_restante restando la cantidad entregada
+//   const newDeudaRestante = currentDeudaRestante - entrega;
+
+//   // Actualizar la base de datos sumando la entrega al campo existente
+//   const result = await pool.query(
+//     "UPDATE clientes SET entrega = entrega + $1, deuda_restante = $2 WHERE id = $3",
+//     [entrega, newDeudaRestante, id]
+//   );
+
+//   if (result.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   return res.json({
+//     message: "Cliente actualizado",
+//   });
+// };
+
+// export const actualizarClienteEntrega = async (req, res) => {
+//   const id = req.params.id;
+//   const { entrega } = req.body;
+
+//   Verifica que la entrega sea un número
+//   if (typeof entrega !== "number") {
+//     return res.status(400).json({
+//       message: "La entrega debe ser de tipo numérico",
+//     });
+//   }
+
+//   Obtener la deuda_restante actual para el cliente especificado
+//   const clientResult = await pool.query(
+//     "SELECT deuda_restante FROM clientes WHERE id = $1",
+//     [id]
+//   );
+
+//   if (clientResult.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   const currentDeudaRestante = clientResult.rows[0].deuda_restante;
+
+//   Verificar si la entrega es mayor que la deuda_restante actual
+//   if (entrega > currentDeudaRestante) {
+//     return res.status(400).json({
+//       message: "La entrega no puede ser mayor a la deuda restante",
+//     });
+//   }
+
+//   Calcular la nueva deuda_restante restando la cantidad entregada
+//   const newDeudaRestante = currentDeudaRestante - entrega;
+
+//   Actualizar la base de datos sumando la entrega al campo existente
+//   const result = await pool.query(
+//     "UPDATE clientes SET entrega = entrega + $1, deuda_restante = $2 WHERE id = $3",
+//     [entrega, newDeudaRestante, id]
+//   );
+
+//   if (result.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   return res.json({
+//     message: "Cliente actualizado",
+//   });
+// };
+
 export const actualizarClienteEntrega = async (req, res) => {
   const id = req.params.id;
-  const { entrega } = req.body;
+  const entregaStr = req.body.entrega;
 
-  // Get the current deuda_restante for the specified client
+  // Verificar si la entrega es un número válido
+  const entrega = parseFloat(entregaStr);
+
+  if (isNaN(entrega)) {
+    return res.status(400).json({
+      message: "La entrega no es un valor numérico válido",
+    });
+  }
+
+  // Obtener la deuda_restante actual para el cliente especificado
   const clientResult = await pool.query(
     "SELECT deuda_restante FROM clientes WHERE id = $1",
     [id]
@@ -317,19 +468,19 @@ export const actualizarClienteEntrega = async (req, res) => {
 
   const currentDeudaRestante = clientResult.rows[0].deuda_restante;
 
-  // Check if the entrega is greater than the current deuda_restante
+  // Verificar si la entrega es mayor que la deuda_restante actual
   if (entrega > currentDeudaRestante) {
     return res.status(400).json({
       message: "La entrega no puede ser mayor a la deuda restante",
     });
   }
 
-  // Calculate the new deuda_restante by subtracting the delivered amount
+  // Calcular la nueva deuda_restante restando la cantidad entregada
   const newDeudaRestante = currentDeudaRestante - entrega;
 
-  // Update the database with the new deuda_restante
+  // Actualizar la base de datos sumando la entrega al campo existente
   const result = await pool.query(
-    "UPDATE clientes SET entrega = $1, deuda_restante = $2 WHERE id = $3",
+    "UPDATE clientes SET entrega = entrega + $1, deuda_restante = $2 WHERE id = $3",
     [entrega, newDeudaRestante, id]
   );
 
@@ -343,6 +494,53 @@ export const actualizarClienteEntrega = async (req, res) => {
     message: "Cliente actualizado",
   });
 };
+
+// Actualizar cliente
+// export const actualizarClienteEntrega = async (req, res) => {
+//   const id = req.params.id;
+//   const { entrega } = req.body;
+
+//   Obtener la deuda_restante actual para el cliente especificado
+//   const clientResult = await pool.query(
+//     "SELECT deuda_restante FROM clientes WHERE id = $1",
+//     [id]
+//   );
+
+//   if (clientResult.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   const currentDeudaRestante = clientResult.rows[0].deuda_restante;
+
+//   Verificar si la entrega es mayor que la deuda_restante actual
+//   if (entrega > currentDeudaRestante) {
+//     return res.status(400).json({
+//       message: "La entrega no puede ser mayor a la deuda restante",
+//     });
+//   }
+
+//   Calcular la nueva deuda_restante restando la cantidad entregada
+//   const newDeudaRestante = currentDeudaRestante - entrega;
+
+//   Actualizar la base de datos sumando la entrega al campo existente
+//   const result = await pool.query(
+//     "UPDATE clientes SET entrega = entrega + $1, deuda_restante = $2 WHERE id = $3",
+//     [entrega, newDeudaRestante, id]
+//   );
+
+//   if (result.rowCount === 0) {
+//     return res.status(404).json({
+//       message: "No existe ningún cliente con ese id",
+//     });
+//   }
+
+//   return res.json({
+//     message: "Cliente actualizado",
+//   });
+// };
+
 //actualizar eliminar
 export const eliminarCliente = async (req, res) => {
   const result = await pool.query("DELETE FROM clientes WHERE id = $1", [
