@@ -8,6 +8,7 @@ import datosFacturacionRoutes from "./routes/datosFacturacion.routes.js";
 import facturacionRoutes from "./routes/facturacion.routes.js";
 import categoriasRoutes from "./routes/categorias.routes.js";
 import coloresRoutes from "./routes/colores.routes.js";
+import pagosRoutes from "./routes/pagos.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -39,6 +40,7 @@ app.use("/api", datosFacturacionRoutes);
 app.use("/api", categoriasRoutes);
 app.use("/api", coloresRoutes);
 app.use("/api", facturacionRoutes);
+app.use("/api", pagosRoutes);
 
 //error handler
 app.use((err, req, res, next) => {
