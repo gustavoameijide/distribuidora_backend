@@ -162,3 +162,36 @@ export const actualizarCantidadPerfil = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const getFacturasPorRangoDeFechas = async (req, res, next) => {
+  try {
+    const { fechaInicio, fechaFin } = req.body;
+
+    // Validación de fechas
+    if (
+      !fechaInicio ||
+      !fechaFin ||
+      !isValidDate(fechaInicio) ||
+      !isValidDate(fechaFin)
+    ) {
+      return res.status(400).json({ message: "Fechas inválidas" });
+    }
+
+    // Función de validación de fecha
+    function isValidDate(dateString) {
+      const regex = /^\d{4}-\d{2}-\d{2}$/;
+      return dateString.match(regex) !== null;
+    }
+
+    // Ajuste de zona horaria UTC
+    const result = await pool.query(
+      "SELECT * FROM facturacion WHERE created_at BETWEEN $1 AND $2 ORDER BY created_at",
+      [fechaInicio, fechaFin]
+    );
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error("Error al obtener salidas:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};

@@ -8,6 +8,7 @@ import {
   getFacturaciones,
   actualizarCantidadPerfil,
   getFacturacionesPorMesActual,
+  getFacturasPorRangoDeFechas,
 } from "../controllers/facturacion.controllers.js";
 
 const router = Router();
@@ -25,5 +26,7 @@ router.post("/actualizarCantidadPerfil", isAuth, actualizarCantidadPerfil);
 router.delete("/facturacion/:id", isAuth, eliminarFacturacion);
 
 router.get("/facturacion-mes", isAuth, getFacturacionesPorMesActual);
+
+router.post("/facturas-rango-fechas", isAuth, getFacturasPorRangoDeFechas);
 
 export default router;
