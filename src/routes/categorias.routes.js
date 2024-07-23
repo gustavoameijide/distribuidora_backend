@@ -7,11 +7,6 @@ import {
   getCategorias,
 } from "../controllers/categorias.controllers.js";
 import { isAuth } from "../middlewares/auth.middleware.js";
-// import { validateSchema } from "../middlewares/validate.middleware.js";
-// import {
-//   createPerfilSchema,
-//   updatePerfilSchema,
-// } from "../schemas/aluminio.schema.js";
 
 const router = Router();
 

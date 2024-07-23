@@ -23,120 +23,6 @@ export const getCliente = async (req, res) => {
   return res.json(result.rows[0]);
 };
 
-//crear cliente
-// export const createCliente = async (req, res, next) => {
-//   const {
-//     nombre,
-//     apellido,
-//     email,
-//     telefono,
-//     domicilio,
-//     localidad,
-//     provincia,
-//     dni,
-//     total_facturado,
-//     entrega,
-//     deuda_restante,
-//   } = req.body;
-
-//   try {
-//     const result = await pool.query(
-//       "INSERT INTO clientes (nombre,apellido,email,telefono,domicilio,localidad,provincia,dni,total_facturado,entrega,deuda_restante,user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
-//       [
-//         nombre,
-//         apellido,
-//         email,
-//         telefono,
-//         domicilio,
-//         localidad,
-//         provincia,
-//         dni,
-//         total_facturado,
-//         entrega,
-//         deuda_restante,
-//         req.userId,
-//       ]
-//     );
-
-//     res.json(result.rows[0]);
-//   } catch (error) {
-//     if (error.code === "23505") {
-//       return res.status(409).json({
-//         message: "Ya existe un cliente con ese nombre",
-//       });
-//     }
-//     next(error);
-//   }
-// };
-// export const createCliente = async (req, res, next) => {
-//   const {
-//     nombre,
-//     apellido,
-//     email,
-//     telefono,
-//     domicilio,
-//     localidad,
-//     provincia,
-//     dni,
-//     total_facturado,
-//     entrega,
-//     deuda_restante,
-//   } = req.body;
-
-//   try {
-//     Verificar si ya existe un cliente con el mismo email
-//     const existingEmail = await pool.query(
-//       "SELECT * FROM clientes WHERE email = $1",
-//       [email]
-//     );
-
-//     if (existingEmail.rowCount > 0) {
-//       return res.status(409).json({
-//         message: "Ya existe un cliente con ese email",
-//       });
-//     }
-
-//     Verificar si ya existe un cliente con el mismo id
-//     const existingId = await pool.query(
-//       "SELECT * FROM clientes WHERE id = $1",
-//       [req.userId]
-//     );
-
-//     if (existingId.rowCount > 0) {
-//       return res.status(409).json({
-//         message: "Ya existe un cliente con ese ID",
-//       });
-//     }
-
-//     const result = await pool.query(
-//       "INSERT INTO clientes (nombre,apellido,email,telefono,domicilio,localidad,provincia,dni,total_facturado,entrega,deuda_restante,user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
-//       [
-//         nombre,
-//         apellido,
-//         email,
-//         telefono,
-//         domicilio,
-//         localidad,
-//         provincia,
-//         dni,
-//         total_facturado,
-//         entrega,
-//         deuda_restante,
-//         req.userId,
-//       ]
-//     );
-
-//     res.json(result.rows[0]);
-//   } catch (error) {
-//     if (error.code === "23505") {
-//       return res.status(409).json({
-//         message: "Ya existe un cliente con ese nombre",
-//       });
-//     }
-//     next(error);
-//   }
-// };
-// Función para generar un ID único
 const generateUniqueId = () => {
   const timestamp = new Date().getTime();
   const random = Math.floor(Math.random() * 10000);
@@ -154,9 +40,9 @@ export const createCliente = async (req, res, next) => {
     localidad,
     provincia,
     dni,
-    total_facturado = 0,
-    entrega = 0,
-    deuda_restante = 0,
+    // total_facturado = 0,
+    // entrega = 0,
+    deuda_restante,
   } = req.body;
 
   try {
@@ -164,7 +50,7 @@ export const createCliente = async (req, res, next) => {
     const clienteId = generateUniqueId();
 
     const result = await pool.query(
-      "INSERT INTO clientes (id, nombre, apellido, email, telefono, domicilio, localidad, provincia, dni, total_facturado, entrega, deuda_restante, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *",
+      "INSERT INTO clientes (id, nombre, apellido, email, telefono, domicilio, localidad, provincia, dni, deuda_restante, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
       [
         clienteId,
         nombre,
@@ -175,14 +61,16 @@ export const createCliente = async (req, res, next) => {
         localidad,
         provincia,
         dni,
-        total_facturado,
-        entrega,
+        // total_facturado,
+        // entrega,
         deuda_restante,
         req.userId,
       ]
     );
+    // Obtener todas las categorías después de la inserción
+    const allClientes = await pool.query("SELECT * FROM clientes");
 
-    res.json(result.rows[0]);
+    res.json(allClientes.rows); // Devolver todas las categorías
   } catch (error) {
     console.log(error);
     if (error.code === "23505") {
@@ -206,13 +94,11 @@ export const actualizarCliente = async (req, res) => {
     localidad,
     provincia,
     dni,
-    total_facturado,
-    entrega,
     deuda_restante,
   } = req.body;
 
   const result = await pool.query(
-    "UPDATE clientes SET nombre = $1, apellido = $2 ,email = $3, telefono = $4, domicilio = $5, localidad = $6, provincia = $7, dni = $8, total_facturado = $9, entrega = $10, deuda_restante = $11 WHERE id = $12",
+    "UPDATE clientes SET nombre = $1, apellido = $2 ,email = $3, telefono = $4, domicilio = $5, localidad = $6, provincia = $7, dni = $8, deuda_restante = $9 WHERE id = $10",
     [
       nombre,
       apellido,
@@ -222,8 +108,6 @@ export const actualizarCliente = async (req, res) => {
       localidad,
       provincia,
       dni,
-      total_facturado,
-      entrega,
       deuda_restante,
       id,
     ]
@@ -235,9 +119,10 @@ export const actualizarCliente = async (req, res) => {
     });
   }
 
-  return res.json({
-    message: "Cliente actualizado",
-  });
+  // Obtener todas las categorías después de la inserción
+  const allClientes = await pool.query("SELECT * FROM clientes");
+
+  res.json(allClientes.rows); // Devolver todas las categorías
 };
 
 export const actualizarClienteFacturacion = async (req, res) => {
@@ -365,7 +250,10 @@ export const eliminarCliente = async (req, res) => {
     });
   }
 
-  return res.sendStatus(204);
+  // Obtener todas las categorías después de la inserción
+  const allClientes = await pool.query("SELECT * FROM clientes");
+
+  res.json(allClientes.rows); // Devolver todas las categorías
 };
 
 export const resetearCamposCliente = async (req, res) => {
@@ -377,18 +265,6 @@ export const resetearCamposCliente = async (req, res) => {
       "SELECT total_facturado, entrega, deuda_restante FROM clientes WHERE id = $1",
       [id]
     );
-
-    if (clienteActual.rowCount === 0) {
-      return res.status(404).json({
-        message: "No existe ningún cliente con ese id",
-      });
-    }
-
-    const {
-      total_facturado: totalFacturadoActual,
-      entrega: entregaActual,
-      deuda_restante: deudaRestanteActual,
-    } = clienteActual.rows[0];
 
     // Calcula los nuevos valores para restablecer a 0
     const nuevoTotalFacturado = 0;
@@ -407,9 +283,10 @@ export const resetearCamposCliente = async (req, res) => {
       });
     }
 
-    return res.json({
-      message: "Campos del cliente reseteados a 0",
-    });
+    // Obtener todas las categorías después de la inserción
+    const allClientes = await pool.query("SELECT * FROM clientes");
+
+    res.json(allClientes.rows); // Devolver todas las categorías
   } catch (error) {
     console.error("Error al resetear los campos del cliente:", error);
     return res.status(500).json({

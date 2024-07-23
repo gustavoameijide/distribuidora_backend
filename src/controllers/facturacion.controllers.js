@@ -37,25 +37,64 @@ export const getFacturacion = async (req, res) => {
 };
 
 export const createFacturacion = async (req, res, next) => {
-  const { clientes, productos, estadistica, estado, tipo_factura, iva_total } =
-    req.body;
+  const {
+    clientes,
+    productos,
+    estadistica,
+    estado,
+    tipo_factura,
+    iva_total,
+    punto,
+  } = req.body;
+
+  let clienteProducts; // Array para almacenar los IDs de los productos vendidos
 
   try {
+    // Iniciar una transacción
+    await pool.query("BEGIN");
+
+    // Insertar la facturación en la tabla facturacion
     const result = await pool.query(
-      "INSERT INTO facturacion (clientes, productos, estadistica, estado,tipo_factura,iva_total, user_id) VALUES ($1, $2, $3, $4,$5,$6,$7) RETURNING *",
+      "INSERT INTO facturacion (clientes, productos, estadistica, estado, tipo_factura, iva_total, punto, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
       [
-        clientes,
-        productos,
-        estadistica,
+        JSON.stringify(clientes),
+        JSON.stringify(productos),
+        JSON.stringify(estadistica),
         estado,
         tipo_factura,
         iva_total,
+        punto,
         req.userId,
       ]
     );
 
-    res.json(result.rows[0]);
+    // Obtener los IDs de los productos vendidos desde la solicitud
+    clienteProducts = productos?.respuesta?.map((producto) => producto.id);
+
+    // Construir y ejecutar la consulta de actualización para cada producto vendido
+    for (const producto of productos.respuesta) {
+      if (punto === "venta") {
+        const updateQuery = `
+          UPDATE perfiles
+          SET stock = stock - $1
+          WHERE id = $2
+        `;
+        await pool.query(updateQuery, [producto.barras, producto.id]);
+      }
+    }
+
+    // Confirmar la transacción
+    await pool.query("COMMIT");
+
+    // Obtener todas las facturas actualizadas
+    const allFacturas = await pool.query("SELECT * FROM facturacion");
+
+    // Enviar respuesta con las facturas actualizadas
+    res.json(allFacturas.rows);
   } catch (error) {
+    // Revertir la transacción si hay un error
+    await pool.query("ROLLBACK");
+
     if (error.code === "23505") {
       return res.status(409).json({
         message: "Ya existe una factura con ese id",
@@ -64,6 +103,111 @@ export const createFacturacion = async (req, res, next) => {
     next(error);
   }
 };
+
+// export const createFacturacion = async (req, res, next) => {
+//   const {
+//     clientes,
+//     productos,
+//     estadistica,
+//     estado,
+//     tipo_factura,
+//     iva_total,
+//     punto,
+//   } = req.body;
+
+//   let clienteProducts; // Array para almacenar los IDs de los productos vendidos
+
+//   try {
+//     // Iniciar una transacción
+//     await pool.query("BEGIN");
+
+//     // Insertar la facturación en la tabla facturacion
+//     const result = await pool.query(
+//       "INSERT INTO facturacion (clientes, productos, estadistica, estado, tipo_factura, iva_total, punto, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+//       [
+//         JSON.stringify(clientes),
+//         JSON.stringify(productos),
+//         JSON.stringify(estadistica),
+//         estado,
+//         tipo_factura,
+//         iva_total,
+//         punto,
+//         req.userId,
+//       ]
+//     );
+
+//     // Obtener los IDs de los productos vendidos desde la solicitud
+//     clienteProducts = productos?.respuesta?.map((producto) => producto.id);
+
+//     // Construir y ejecutar la consulta de actualización para cada producto vendido
+//     for (const producto of productos.respuesta) {
+//       const updateQuery = `
+//         UPDATE perfiles
+//         SET stock = stock - $1
+//         WHERE id = $2
+//       `;
+//       await pool.query(updateQuery, [producto.barras, producto.id]);
+//     }
+
+//     // Confirmar la transacción
+//     await pool.query("COMMIT");
+
+//     // Obtener todas las facturas actualizadas
+//     const allFacturas = await pool.query("SELECT * FROM facturacion");
+
+//     // Enviar respuesta con las facturas actualizadas
+//     res.json(allFacturas.rows);
+//   } catch (error) {
+//     // Revertir la transacción si hay un error
+//     await pool.query("ROLLBACK");
+
+//     if (error.code === "23505") {
+//       return res.status(409).json({
+//         message: "Ya existe una factura con ese id",
+//       });
+//     }
+//     next(error);
+//   }
+// };
+
+// export const createFacturacion = async (req, res, next) => {
+//   const {
+//     clientes,
+//     productos,
+//     estadistica,
+//     estado,
+//     tipo_factura,
+//     iva_total,
+//     punto,
+//   } = req.body;
+
+//   try {
+//     const result = await pool.query(
+//       "INSERT INTO facturacion (clientes, productos, estadistica, estado,tipo_factura,iva_total, punto, user_id) VALUES ($1, $2, $3, $4,$5,$6,$7, $8) RETURNING *",
+//       [
+//         clientes,
+//         productos,
+//         estadistica,
+//         estado,
+//         tipo_factura,
+//         iva_total,
+//         punto,
+//         req.userId,
+//       ]
+//     );
+
+//     const allFacturas = await pool.query("SELECT * FROM facturacion");
+
+//     res.json(allFacturas.rows);
+//   } catch (error) {
+//     if (error.code === "23505") {
+//       return res.status(409).json({
+//         message: "Ya existe una factura con ese id",
+//       });
+//     }
+//     next(error);
+//   }
+// };
 
 //actualizar cliente
 export const actualizarFacturacion = async (req, res) => {
@@ -147,11 +291,6 @@ export const actualizarCantidadPerfil = async (req, res) => {
         }
       })
     );
-
-    console.log("Request Payload:", { respuesta: productos });
-    console.log("Request Body:", req.body);
-    console.log("Update Result:", updateResult.rows);
-    console.log("Rows Affected:", updateResult.rowCount);
 
     await pool.query("COMMIT"); // Commit the transaction
 

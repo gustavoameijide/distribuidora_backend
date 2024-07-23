@@ -31,7 +31,10 @@ export const crearColores = async (req, res, next) => {
       [color, req.userId]
     );
 
-    res.json(result.rows[0]);
+    // Obtener todas las categorías después de la inserción
+    const allColores = await pool.query("SELECT * FROM colores");
+
+    res.json(allColores.rows); // Devolver todas las categorías
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({
@@ -57,9 +60,10 @@ export const actualizarColores = async (req, res) => {
     });
   }
 
-  return res.json({
-    message: "Color actualizado",
-  });
+  // Obtener todas las categorías después de la inserción
+  const allColores = await pool.query("SELECT * FROM colores");
+
+  res.json(allColores.rows); // Devolver todas las categorías
 };
 
 export const eliminarColor = async (req, res) => {
@@ -72,6 +76,8 @@ export const eliminarColor = async (req, res) => {
       message: "No existe ningun color con ese id",
     });
   }
+  // Obtener todas las categorías después de la inserción
+  const allColores = await pool.query("SELECT * FROM colores");
 
-  return res.sendStatus(204);
+  res.json(allColores.rows); // Devolver todas las categorías
 };

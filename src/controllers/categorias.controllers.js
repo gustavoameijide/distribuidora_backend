@@ -27,12 +27,16 @@ export const createCategoria = async (req, res, next) => {
   const { categoria } = req.body;
 
   try {
+    // Insertar una nueva categoría en la base de datos
     const result = await pool.query(
-      "INSERT INTO categorias (categoria,user_id) VALUES ($1, $2) RETURNING *",
+      "INSERT INTO categorias (categoria, user_id) VALUES ($1, $2) RETURNING *",
       [categoria, req.userId]
     );
 
-    res.json(result.rows[0]);
+    // Obtener todas las categorías después de la inserción
+    const allCategories = await pool.query("SELECT * FROM categorias");
+
+    res.json(allCategories.rows); // Devolver todas las categorías
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({
@@ -74,5 +78,8 @@ export const eliminarCategoria = async (req, res) => {
     });
   }
 
-  return res.sendStatus(204);
+  // Obtener todas las categorías después de la inserción
+  const allCategories = await pool.query("SELECT * FROM categorias");
+
+  res.json(allCategories.rows); // Devolver todas las categorías
 };
