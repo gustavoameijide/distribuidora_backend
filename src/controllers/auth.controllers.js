@@ -1,6 +1,6 @@
 import { pool } from "../db.js";
 import { createAccessToken } from "../libs/jwt.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import md5 from "md5";
 
 //login
