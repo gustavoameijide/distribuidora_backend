@@ -1,4 +1,5 @@
 import { pool } from "../db.js";
+import { v4 as uuidv4 } from "uuid";
 
 //obtener clientes
 export const getClientes = async (req, res, next) => {
@@ -40,8 +41,6 @@ export const createCliente = async (req, res, next) => {
     localidad,
     provincia,
     dni,
-    // total_facturado = 0,
-    // entrega = 0,
     deuda_restante,
   } = req.body;
 
@@ -49,8 +48,10 @@ export const createCliente = async (req, res, next) => {
     // Genera un ID único utilizando la función generateUniqueId
     const clienteId = generateUniqueId();
 
+    const pagos = "[]";
+
     const result = await pool.query(
-      "INSERT INTO clientes (id, nombre, apellido, email, telefono, domicilio, localidad, provincia, dni, deuda_restante, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
+      "INSERT INTO clientes (id, nombre, apellido, email, telefono, domicilio, localidad, provincia, dni, deuda_restante, pagos, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
       [
         clienteId,
         nombre,
@@ -61,9 +62,8 @@ export const createCliente = async (req, res, next) => {
         localidad,
         provincia,
         dni,
-        // total_facturado,
-        // entrega,
         deuda_restante,
+        pagos,
         req.userId,
       ]
     );
@@ -292,5 +292,65 @@ export const resetearCamposCliente = async (req, res) => {
     return res.status(500).json({
       message: "Error interno del servidor",
     });
+  }
+};
+
+export const crearPago = async (req, res) => {
+  const { id } = req.params; // ID del proveedor
+  const { comprobante } = req.body; // Comprobante enviado desde el frontend
+
+  try {
+    // Generar un ID aleatorio usando uuid
+    const comprobanteId = uuidv4();
+
+    // Obtener la fecha actual
+    const fechaActual = new Date().toISOString(); // Formato ISO 8601: 'YYYY-MM-DDTHH:mm:ss.sssZ'
+
+    // Obtener el proveedor según el ID
+    const proveedorResult = await pool.query(
+      "SELECT * FROM clientes WHERE id = $1",
+      [id]
+    );
+
+    if (proveedorResult.rowCount === 0) {
+      return res.status(404).json({
+        message: "No se encontró ningún proveedor con ese ID",
+      });
+    }
+
+    let proveedor = proveedorResult.rows[0];
+
+    // Obtener el arreglo de comprobantes actuales y agregar el nuevo comprobante
+    let comprobantesArray = JSON.parse(proveedor.pagos || "[]");
+
+    // Extraer el total del comprobante
+    const totalComprobante = parseFloat(comprobante.total);
+
+    // Sumar el total del comprobante al haber actual del proveedor
+    const nuevoHaber = parseFloat(proveedor.deuda_restante) - totalComprobante;
+
+    comprobantesArray.push({
+      ...comprobante,
+      id: comprobanteId,
+      fecha: fechaActual,
+    });
+
+    // Actualizar el proveedor con el nuevo arreglo de comprobantes y el nuevo haber
+    const result = await pool.query(
+      "UPDATE clientes SET pagos = $1, deuda_restante = $2 WHERE id = $3 RETURNING *",
+      [JSON.stringify(comprobantesArray), nuevoHaber, id]
+    );
+
+    proveedor = result.rows[0]; // Actualizar proveedor con los datos actualizados
+
+    const allClientes = await pool.query("SELECT * FROM clientes");
+
+    res.status(200).json({
+      clienteActualizado: proveedor,
+      todosLosClientes: allClientes.rows, // Opcional: puedes devolver todos los proveedores actualizados
+    });
+  } catch (error) {
+    console.error("Error al crear comprobante:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 };

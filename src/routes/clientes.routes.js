@@ -8,6 +8,7 @@ import {
   actualizarClienteFacturacion,
   actualizarClienteEntrega,
   resetearCamposCliente,
+  crearPago,
 } from "../controllers/clientes.controllers.js";
 import { isAuth } from "../middlewares/auth.middleware.js";
 
@@ -28,5 +29,7 @@ router.put("/clientes/facturacion/:id", isAuth, actualizarClienteFacturacion);
 router.put("/clientes/resetear/:id", isAuth, resetearCamposCliente);
 
 router.delete("/clientes/:id", isAuth, eliminarCliente);
+
+router.post("/clientes/:id/comprobantes", isAuth, crearPago);
 
 export default router;
