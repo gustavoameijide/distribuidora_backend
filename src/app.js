@@ -9,6 +9,8 @@ import facturacionRoutes from "./routes/facturacion.routes.js";
 import categoriasRoutes from "./routes/categorias.routes.js";
 import coloresRoutes from "./routes/colores.routes.js";
 import pagosRoutes from "./routes/pagos.routes.js";
+import accesoriosRoutes from "./routes/accesorios.routes.js";
+import facturacionAccesoriosRoutes from "./routes/facturacionAccesorios.routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -41,6 +43,8 @@ app.use("/api", categoriasRoutes);
 app.use("/api", coloresRoutes);
 app.use("/api", facturacionRoutes);
 app.use("/api", pagosRoutes);
+app.use("/api", accesoriosRoutes);
+app.use("/api", facturacionAccesoriosRoutes);
 
 //error handler
 app.use((err, req, res, next) => {
