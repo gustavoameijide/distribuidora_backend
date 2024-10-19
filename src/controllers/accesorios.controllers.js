@@ -26,16 +26,13 @@ export const getAccesorio = async (req, res) => {
 
 // Crear un nuevo accesorio
 export const createAccesorio = async (req, res, next) => {
-  const { codigo, descripcion, stock } = req.body;
+  const { codigo, descripcion, stock, precio } = req.body;
 
   try {
-    // Generar un ID aleatorio para el accesorio
-    // const randomId = Math.floor(Math.random() * (999999 - 100000 + 1) + 100000);
-
     // Insertar un nuevo accesorio en la base de datos
     const result = await pool.query(
-      "INSERT INTO accesorios ( codigo, descripcion, stock, user_id) VALUES ($1, $2, $3, $4) RETURNING *",
-      [codigo, descripcion, stock, req.userId]
+      "INSERT INTO accesorios ( codigo, descripcion, stock, precio, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [codigo, descripcion, stock, precio, req.userId]
     );
 
     // Obtener todos los accesorios después de la inserción
@@ -55,11 +52,11 @@ export const createAccesorio = async (req, res, next) => {
 // Actualizar un accesorio existente
 export const actualizarAccesorio = async (req, res) => {
   const id = req.params.id;
-  const { codigo, descripcion, stock } = req.body;
+  const { codigo, descripcion, stock, precio } = req.body;
 
   const result = await pool.query(
-    "UPDATE accesorios SET codigo = $1, descripcion = $2, stock = $3 WHERE id = $4",
-    [codigo, descripcion, stock, id]
+    "UPDATE accesorios SET codigo = $1, descripcion = $2, stock = $3, precio = $4 WHERE id = $5",
+    [codigo, descripcion, stock, precio, id]
   );
 
   if (result.rowCount === 0) {
